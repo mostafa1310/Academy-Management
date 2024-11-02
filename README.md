@@ -1,4 +1,4 @@
-# auc_project
+# Academy Management
 
 A new Flutter project.
 

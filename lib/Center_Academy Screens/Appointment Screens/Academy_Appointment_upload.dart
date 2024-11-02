@@ -2,10 +2,10 @@
 
 import 'dart:convert';
 
-import 'package:auc_project/Main_Manger.dart';
-import 'package:auc_project/Widget/CustomDropDownFormField.dart';
+import 'package:Academy_Management/Main_Manger.dart';
+import 'package:Academy_Management/Widget/CustomDropDownFormField.dart';
 import 'package:flutter/material.dart';
-import 'package:auc_project/main.dart';
+import 'package:Academy_Management/main.dart';
 import 'package:http/http.dart' as http;
 
 int currentPageIndex = 0;

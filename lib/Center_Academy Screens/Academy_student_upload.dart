@@ -2,13 +2,13 @@
 
 import 'dart:convert';
 
-import 'package:auc_project/Main_Manger.dart';
-import 'package:auc_project/Widget/CustomDropDownFormField.dart';
-import 'package:auc_project/Widget/CustomTextFormField.dart';
+import 'package:Academy_Management/Main_Manger.dart';
+import 'package:Academy_Management/Widget/CustomDropDownFormField.dart';
+import 'package:Academy_Management/Widget/CustomTextFormField.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../Screens/Auth_Login.dart';
-import 'package:auc_project/main.dart';
+import 'package:Academy_Management/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;

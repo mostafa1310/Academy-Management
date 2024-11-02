@@ -2,12 +2,12 @@
 
 import 'dart:convert';
 
-import 'package:auc_project/Center_Academy%20Screens/Appointment%20Screens/Academy_Appointments_Students_edit.dart';
-import 'package:auc_project/Center_Academy%20Screens/Appointment%20Screens/Attendance%20Screens/Academy_Attendance_Students_upload.dart';
-import 'package:auc_project/Center_Academy%20Screens/Appointment%20Screens/Attendance%20Screens/Academy_Attendance_upload.dart';
-import 'package:auc_project/Main_Manger.dart';
+import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Academy_Appointments_Students_edit.dart';
+import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Attendance%20Screens/Academy_Attendance_Students_upload.dart';
+import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Attendance%20Screens/Academy_Attendance_upload.dart';
+import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
-import 'package:auc_project/main.dart';
+import 'package:Academy_Management/main.dart';
 import 'package:http/http.dart' as http;
 
 int currentPageIndex = 0;

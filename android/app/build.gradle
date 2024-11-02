@@ -36,7 +36,7 @@ if (fluttercompilesdk == null) {
 }
 
 android {
-    namespace "com.AUC.AUC_Academy"
+    namespace "com.MGO.Academy_Management"
     compileSdk fluttercompilesdk.toInteger()
     ndkVersion "26.1.10909125"
 
@@ -55,7 +55,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.AUC.AUC_Academy"
+        applicationId "com.MGO.Academy_Management"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutterminsdk.toInteger()

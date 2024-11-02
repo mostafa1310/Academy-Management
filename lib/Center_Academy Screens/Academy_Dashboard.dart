@@ -1,9 +1,9 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
-import 'package:auc_project/Center_Academy%20Screens/Academy_Teacher_upload.dart';
+import 'package:Academy_Management/Center_Academy%20Screens/Academy_Teacher_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../Screens/Auth_Login.dart';
-import 'package:auc_project/main.dart';
+import 'package:Academy_Management/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'Appointment Screens/Academy_Appointments.dart';
 import 'Academy_student_upload.dart';

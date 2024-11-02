@@ -2,9 +2,9 @@
 
 import 'dart:io';
 
-import 'package:auc_project/Screens/Auth_Login.dart';
-import 'package:auc_project/Teacher%20Screens/Teacher_Dashboard.dart';
-import 'package:auc_project/config_prod.dart';
+import 'package:Academy_Management/Screens/Auth_Login.dart';
+import 'package:Academy_Management/Teacher%20Screens/Teacher_Dashboard.dart';
+import 'package:Academy_Management/config_prod.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +16,7 @@ import 'Center_Academy Screens/Academy_Dashboard.dart';
 import 'Client Screens/Student_Dashboard.dart';
 import 'firebase_options.dart';
 
-const String name = 'my.AUC.AUC_APP';
+const String name = 'my.Academy_Management.Academy_Management_APP';
 const String Api_Url = Api_Url_var;
 
 void print_developer(Object value) {
@@ -170,7 +170,7 @@ class Logo extends StatelessWidget {
             ),
           ),
           child: Image.asset(
-            'assets/AUC Logo.png',
+            'assets/Academy_Management Logo.png',
             width: 75, // Set the width of the image
             height: 75, // Set the height of the image
           ),

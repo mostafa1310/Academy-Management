@@ -1,7 +1,7 @@
 // ignore_for_file: file_names, non_constant_identifier_names, depend_on_referenced_packages, use_build_context_synchronously, duplicate_ignore
 
-import 'package:auc_project/Center_Academy%20Screens/Academy_Dashboard.dart';
-import 'package:auc_project/main.dart';
+import 'package:Academy_Management/Center_Academy%20Screens/Academy_Dashboard.dart';
+import 'package:Academy_Management/main.dart';
 import '../Client Screens/Student_Dashboard.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

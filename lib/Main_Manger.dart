@@ -1,6 +1,6 @@
 // ignore_for_file: file_names, non_constant_identifier_names, camel_case_types
 
-import 'package:auc_project/main.dart';
+import 'package:Academy_Management/main.dart';
 import 'package:flutter/material.dart';
 
 double top_gap = 20;

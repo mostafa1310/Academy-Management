@@ -2,13 +2,13 @@
 
 import 'dart:typed_data';
 
-import 'package:auc_project/Client%20Screens/Student_Material_Selection.dart';
+import 'package:Academy_Management/Client%20Screens/Student_Material_Selection.dart';
 import 'package:flutter/material.dart';
 import '../Screens/Auth_Login.dart';
-import 'package:auc_project/main.dart';
+import 'package:Academy_Management/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'package:auc_project/Main_Manger.dart';
+import 'package:Academy_Management/Main_Manger.dart';
 import 'dart:convert';
 
 int currentPageIndex = 0;
