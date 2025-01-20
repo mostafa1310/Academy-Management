@@ -121,11 +121,11 @@ class _Student_AttendancesState extends State<Student_Attendances> {
                           bottomRight: Radius.circular(15),
                         ),
                       ), // Adjust the top margin
-                      child: Image.asset(
-                        'assets/AUC Logo.png',
-                        width: 75,
-                        height: 75,
-                      ),
+                      // child: Image.asset(
+                      //   'assets/AUC Logo.png',
+                      //   width: 75,
+                      //   height: 75,
+                      // ),
                     ),
                   ),
                 ],

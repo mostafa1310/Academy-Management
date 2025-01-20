@@ -109,7 +109,7 @@ class _Teacher_DashboardState extends State<Teacher_Dashboard> {
                       fontSize: 28, color: Color.fromARGB(255, 0, 53, 90)),
                 ),
                 Text(
-                  'AUC App',
+                  'Academy App',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

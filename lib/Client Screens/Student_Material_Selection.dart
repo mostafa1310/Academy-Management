@@ -73,11 +73,11 @@ class _Student_Material_SelectionState
                     bottomRight: Radius.circular(15),
                   ),
                 ),
-                child: Image.asset(
-                  'assets/AUC Logo.png',
-                  width: 75, // Set the width of the image
-                  height: 75, // Set the height of the image
-                ),
+                // child: Image.asset(
+                //   'assets/AUC Logo.png',
+                //   width: 75, // Set the width of the image
+                //   height: 75, // Set the height of the image
+                // ),
               ),
             ),
             Center(

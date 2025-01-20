@@ -132,7 +132,7 @@ class _Student_DashboardState extends State<Student_Dashboard> {
                           ),
                         ),
                         Text(
-                          'AUC App',
+                          'Academy App',
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,

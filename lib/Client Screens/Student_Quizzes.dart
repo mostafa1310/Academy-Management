@@ -131,11 +131,11 @@ class _Student_QuizzesState extends State<Student_Quizzes> {
                             bottomRight: Radius.circular(15),
                           ),
                         ), // Adjust the top margin
-                        child: Image.asset(
-                          'assets/AUC Logo.png',
-                          width: 75,
-                          height: 75,
-                        ),
+                        // child: Image.asset(
+                        //   'assets/AUC Logo.png',
+                        //   width: 75,
+                        //   height: 75,
+                        // ),
                       ),
                     ),
                   ],

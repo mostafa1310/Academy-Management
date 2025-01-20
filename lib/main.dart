@@ -29,6 +29,7 @@ String supabaseKey = "";
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
+    name: "dev project",
     options: DefaultFirebaseOptions.currentPlatform,
   );
   final remoteConfig = FirebaseRemoteConfig.instance;
@@ -76,6 +77,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     if (supabase.auth.currentUser == null) {
       return MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Login',
         theme: ThemeData(
           primarySwatch: Colors.blue,
@@ -86,6 +88,7 @@ class MyApp extends StatelessWidget {
       );
     } else {
       return MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Home',
         theme: ThemeData(
           primarySwatch: Colors.blue,
