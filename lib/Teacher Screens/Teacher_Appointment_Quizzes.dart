@@ -1,13 +1,10 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Quiz%20Screens/Academy_Quiz_Students_upload.dart';
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Quiz%20Screens/Academy_Quiz_upload.dart';
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
 import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
 
 int currentPageIndex = 0;
 
@@ -25,44 +22,57 @@ class _Teacher_Appointment_QuizzesState
   List<Quiz> Quizzes_list = [];
   Future<void> Get_Appointment_Quizzes() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Appointment_Quizzes/${widget.appointment.ID}"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        setState(() {
-          Quizzes_list.clear();
-        });
-        print_developer("decode data");
-        var jsonList = jsonDecode(response.body);
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Mock quiz data
+      final mockQuizzes = [
+        Quiz(
+          ID: 1,
+          Appointment_ID: widget.appointment.ID,
+          Max_mark: 100,
+          Name: "Quiz 1",
+          created_at: DateTime.now().subtract(const Duration(days: 2)),
+          Students: [
+            Student_Quiz_mark(
+              ID: 1001,
+              Name: "John Doe",
+              Mark: 85,
+            ),
+            Student_Quiz_mark(
+              ID: 1002,
+              Name: "Alice Johnson",
+              Mark: 92,
+            ),
+          ],
+        ),
+        Quiz(
+          ID: 2,
+          Appointment_ID: widget.appointment.ID,
+          Max_mark: 50,
+          Name: "Pop Quiz",
+          created_at: DateTime.now(),
+          Students: [
+            Student_Quiz_mark(
+              ID: 1001,
+              Name: "John Doe",
+              Mark: 45,
+            ),
+            Student_Quiz_mark(
+              ID: 1002,
+              Name: "Alice Johnson",
+              Mark: 48,
+            ),
+          ],
+        ),
+      ];
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<Quiz> Attendance_data =
-              jsonList.map((json) => Quiz.fromMap(json)).toList();
-          setState(() {
-            Quizzes_list = Attendance_data;
-          });
-          if (Quizzes_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-      }
+      setState(() {
+        Quizzes_list = mockQuizzes;
+      });
     } catch (e) {
       print_developer("Failed to load data $e");
       error_show("Failed to load data", context);
-      // ignore: empty_catches
     }
   }
 

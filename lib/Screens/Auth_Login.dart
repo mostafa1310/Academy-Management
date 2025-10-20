@@ -17,7 +17,6 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
-  bool _isLoading = false;
 
   void _signInAsRole(BuildContext context, String role) async {
     setState(() {

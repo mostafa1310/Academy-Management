@@ -19,7 +19,7 @@ class MockSupabaseService {
     required String password,
   }) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     final userData = {
       'aud': 'authenticated',
       'exp': DateTime.now().add(const Duration(days: 7)).millisecondsSinceEpoch,
@@ -27,10 +27,10 @@ class MockSupabaseService {
       'email': email,
       'phone': '',
       'app_metadata': {'provider': 'email'},
-      'user_metadata': email.contains('academy') 
-          ? MockData.academyData 
-          : email.contains('teacher') 
-              ? MockData.teacherData 
+      'user_metadata': email.contains('academy')
+          ? MockData.academyData
+          : email.contains('teacher')
+              ? MockData.teacherData
               : MockData.studentData,
       'role': '',
     };

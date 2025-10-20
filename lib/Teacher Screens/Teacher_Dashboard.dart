@@ -1,15 +1,11 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:Academy_Management/Teacher%20Screens/Teacher_Appointment_Quizzes.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../Screens/Auth_Login.dart';
 import 'package:Academy_Management/main.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:http/http.dart' as http;
 
 int currentPageIndex = 0;
 
@@ -27,44 +23,46 @@ class _Teacher_DashboardState extends State<Teacher_Dashboard> {
   List<Appointment> Appointments_list = [];
   Future<void> Get_Teacher_Appointments() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Teacher_Appointments/${widget.ID}"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        setState(() {
-          Appointments_list.clear();
-        });
-        print_developer("decode data");
-        var jsonList = jsonDecode(response.body);
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Use mock data
+      final mockAppointments = [
+        Appointment(
+          ID: 1,
+          date: Date(
+            First_Day: "Monday",
+            Second_Day: "Wednesday",
+            Hour_From: 9,
+            Hour_To: 11,
+            Hour_Mode: "AM"
+          ),
+          Grade: "Grade 10",
+          Material: "Mathematics",
+          Teacher_ID: widget.ID,
+        ),
+        Appointment(
+          ID: 2,
+          date: Date(
+            First_Day: "Tuesday",
+            Second_Day: "Thursday",
+            Hour_From: 1,
+            Hour_To: 3,
+            Hour_Mode: "PM"
+          ),
+          Grade: "Grade 11",
+          Material: "Physics",
+          Teacher_ID: widget.ID,
+        ),
+      ];
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<Appointment> Appointments_data =
-              jsonList.map((json) => Appointment.fromMap(json)).toList();
-          setState(() {
-            Appointments_list = Appointments_data;
-          });
-          if (Appointments_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-      }
+      setState(() {
+        Appointments_list = mockAppointments;
+      });
+      
     } catch (e) {
       print_developer("Failed to load data $e");
       error_show("Failed to load data", context);
-      // ignore: empty_catches
     }
   }
 
@@ -163,17 +161,18 @@ class _Teacher_DashboardState extends State<Teacher_Dashboard> {
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
           onPressed: () async {
-            await Supabase.instance.client.auth.signOut();
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              PageTransition(
-                type: PageTransitionType.bottomToTopPop,
-                duration: const Duration(seconds: 2),
-                child: const LoginPage(),
-                childCurrent: widget,
-              ),
-            );
+            await supabase.signOut();
+            if (context.mounted) {
+              Navigator.pushReplacement(
+                context,
+                PageTransition(
+                  type: PageTransitionType.bottomToTopPop,
+                  duration: const Duration(milliseconds: 300),
+                  child: const LoginPage(),
+                  childCurrent: widget,
+                ),
+              );
+            }
           },
           child: const Text('Sign Out'),
         ));

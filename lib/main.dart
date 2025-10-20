@@ -3,7 +3,6 @@
 import 'package:Academy_Management/Screens/Auth_Login.dart';
 import 'package:Academy_Management/Teacher%20Screens/Teacher_Dashboard.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:developer' as developer;
 import 'Center_Academy Screens/Academy_Dashboard.dart';
 import 'Client Screens/Student_Dashboard.dart';
@@ -19,10 +18,10 @@ late MockSupabaseService supabase;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize mock services
   supabase = MockSupabaseService();
-  
+
   print_developer("Mock services initialized");
 
   runApp(const MyApp());
@@ -61,7 +60,7 @@ class MyApp extends StatelessWidget {
 MaterialApp app() {
   supabase.refreshSession();
   final metadata = supabase.currentUser?.userMetadata;
-  
+
   if (metadata != null) {
     if (metadata.containsValue("Student")) {
       print_developer(metadata);

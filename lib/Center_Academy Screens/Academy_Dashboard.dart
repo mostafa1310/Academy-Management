@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../Screens/Auth_Login.dart';
 import 'package:Academy_Management/main.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'Appointment Screens/Academy_Appointments.dart';
 import 'Academy_student_upload.dart';
 
@@ -89,9 +88,7 @@ class _Academy_DashboardState extends State<Academy_Dashboard> {
             setState(() {
               currentPageIndex = index;
             });
-            if (currentPageIndex != 1) {
-              supabase.channel('schema-db-changes').unsubscribe();
-            }
+            // Mock implementation - no channels to unsubscribe
           },
           indicatorColor: const Color.fromARGB(255, 160, 159, 159),
           selectedIndex: currentPageIndex,
@@ -106,17 +103,18 @@ class _Academy_DashboardState extends State<Academy_Dashboard> {
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
           onPressed: () async {
-            await Supabase.instance.client.auth.signOut();
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              PageTransition(
-                type: PageTransitionType.bottomToTopPop,
-                duration: const Duration(seconds: 2),
-                child: const LoginPage(),
-                childCurrent: widget,
-              ),
-            );
+            await supabase.signOut();
+            if (context.mounted) {
+              Navigator.pushReplacement(
+                context,
+                PageTransition(
+                  type: PageTransitionType.bottomToTopPop,
+                  duration: const Duration(milliseconds: 300),
+                  child: const LoginPage(),
+                  childCurrent: widget,
+                ),
+              );
+            }
           },
           child: const Text('Sign Out'),
         ));

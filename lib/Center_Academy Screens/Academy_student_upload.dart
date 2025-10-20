@@ -1,7 +1,5 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:Academy_Management/Widget/CustomDropDownFormField.dart';
 import 'package:Academy_Management/Widget/CustomTextFormField.dart';
@@ -9,9 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import '../Screens/Auth_Login.dart';
 import 'package:Academy_Management/main.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 
 int currentPageIndex = 0;
 
@@ -67,27 +63,22 @@ class _Academy_student_uploadState extends State<Academy_student_upload> {
             .where((material) => material.isSelected)
             .map((material) => material.name)
             .toList());
+    
     try {
-      supabase.realtime.disconnect();
-      print_developer(jsonEncode(student.toJson()));
-      final response = await http.post(
-        Uri.parse("${Api_Url}Student_Management/Student_Upload"),
-        body: jsonEncode(student.toJson()),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        print_developer('Data: ${response.body}');
-        var json = jsonDecode(response.body);
-        _showPopup(context, json["email"], json["password"]);
-        error_show("Student Uploaded successfully", context);
-        return true;
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-        return false;
-      }
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Generate mock credentials
+      final mockEmail = '${selected_Email.toLowerCase()}';
+      final mockPassword = 'student${DateTime.now().millisecondsSinceEpoch % 1000}';
+      
+      // Show mock credentials
+      _showPopup(context, mockEmail, mockPassword);
+      error_show("Student Uploaded successfully", context);
+      
+      print_developer('Mock student created: ${student.toJson()}');
+      return true;
+      
     } catch (e) {
       print_developer(e);
       error_show(e.toString(), context);
@@ -359,16 +350,18 @@ class _Academy_student_uploadState extends State<Academy_student_upload> {
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
           onPressed: () async {
-            await Supabase.instance.client.auth.signOut();
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              PageTransition(
-                type: PageTransitionType.bottomToTopPop,
-                childCurrent: context.widget,
-                child: const LoginPage(),
-              ),
-            );
+            await supabase.signOut();
+            if (context.mounted) {
+              Navigator.pushReplacement(
+                context,
+                PageTransition(
+                  type: PageTransitionType.bottomToTopPop,
+                  duration: const Duration(milliseconds: 300),
+                  child: const LoginPage(),
+                  childCurrent: context.widget,
+                ),
+              );
+            }
           },
           child: const Text('Sign Out'),
         ));
