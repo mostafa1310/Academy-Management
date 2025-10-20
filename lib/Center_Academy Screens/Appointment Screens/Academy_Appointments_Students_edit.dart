@@ -1,11 +1,10 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../../../mock/mock_service.dart';
+import '../../../mock/mock_data.dart';
+import '../../../Widget/back_button.dart';
 
 int currentPageIndex = 0;
 
@@ -29,86 +28,86 @@ class _Academy_Appointments_Students_editState
         Students_list.clear();
         studentItems.clear();
       });
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Students_For_Attendance/${widget.appointment.Grade}/${widget.appointment.Material}"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (!mounted) {
+
+      // Get mock students
+      final mockDB = MockDatabaseService();
+      final students = await mockDB.getStudents();
+
+      // Filter students by grade and material
+      final filteredStudents = students.where((student) {
+        final gradeMatch = student['grade'] == widget.appointment.Grade;
+        final materials = (student['materials'] as List<dynamic>?)
+            ?.map((m) => m.toString())
+            .toList();
+        final materialMatch = materials != null
+            ? materials.contains(widget.appointment.Material)
+            : false;
+        return gradeMatch && materialMatch;
+      }).map((student) {
+        // Map student's materials list to the Student model
+        final materials = (student['materials'] as List<dynamic>?)
+            ?.map((m) => m.toString())
+            .toList();
+
+        return Student(
+          ID: student['ID'],
+          Name: student['name'],
+          Email: student['email'],
+          Phone: student['phone'],
+          Grade: student['grade'],
+          Materials: materials ?? [],
+        );
+      }).toList();
+
+      if (!mounted) return;
+
+      if (filteredStudents.isEmpty) {
+        error_show("No students found", context);
         return;
       }
-      if (response.statusCode == 200) {
-        print_developer("decode data");
-        var jsonList = jsonDecode(response.body);
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<Student> Students_data =
-              jsonList.map((json) => Student.fromMap(json)).toList();
-          setState(() {
-            Students_list = Students_data;
-          });
-          if (Students_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-          print_developer(Students_list.length);
-          studentItems.addAll(
-            Students_list.map((item) => StudentItem(student: item)).toList(),
-          );
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-      }
+      setState(() {
+        Students_list = filteredStudents;
+        studentItems.addAll(
+          Students_list.map((item) => StudentItem(student: item)).toList(),
+        );
+      });
     } catch (e) {
-      print_developer("Failed to load data $e");
-      error_show("Failed to load data $e", context);
-      // ignore: empty_catches
+      debugPrint("Failed to load students: $e");
+      if (mounted) {
+        error_show("Failed to load students", context);
+      }
     }
   }
 
   Future<bool> send_Appointment_Students() async {
-    print_developer("start_upload");
-    List<Map<String, dynamic>> selected_Students_list = studentItems
-        .where((x) => x.isSelected)
-        .toList()
-        .map((x) => x.student)
-        .toList()
-        .map((x) => Student_Appointment(Name: x.Name, ID: x.ID!))
-        .toList()
-        .map((x) => x.toJson())
-        .toList();
-    print_developer(selected_Students_list.length);
     try {
-      supabase.realtime.disconnect();
-      print_developer(jsonEncode(selected_Students_list));
-      final response = await http.post(
-        Uri.parse(
-            "${Api_Url}Student_Management/Upload_Appointment_Students/${widget.appointment.ID}"),
-        body: jsonEncode(selected_Students_list),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        print_developer('Data: ${response.body}');
-        error_show("Students Uploaded successfully", context);
-        return true;
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
+      // Get selected students
+      final selectedStudents = studentItems
+          .where((x) => x.isSelected)
+          .map((x) => {
+                'student_id': x.student.ID,
+                'name': x.student.Name,
+              })
+          .toList();
+
+      // Get the appointment to update
+      final appointmentIndex = MockData.appointments
+          .indexWhere((a) => a['ID'] == widget.appointment.ID);
+
+      if (appointmentIndex == -1) {
+        error_show("Appointment not found", context);
         return false;
       }
+
+      // Update the appointment with selected students
+      MockData.appointments[appointmentIndex]['students'] = selectedStudents;
+
+      error_show("Students assigned successfully", context);
+      return true;
     } catch (e) {
-      print_developer(e);
-      error_show(e.toString(), context);
+      debugPrint("Failed to assign students: $e");
+      error_show("Failed to assign students", context);
       return false;
     }
   }
@@ -237,7 +236,6 @@ class _Academy_Appointments_Students_editState
                 ],
               ),
               Back_Button(),
-              Logo(),
             ],
           ),
         ),

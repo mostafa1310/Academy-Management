@@ -1,11 +1,11 @@
 // ignore_for_file: file_names, non_constant_identifier_names
 
 import 'package:Academy_Management/Center_Academy%20Screens/Academy_Dashboard.dart';
-import 'package:Academy_Management/main.dart';
 import '../Client Screens/Student_Dashboard.dart';
 import '../Teacher Screens/Teacher_Dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
+import '../mock/mock_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,36 +23,36 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    String email;
-    int userId;
-
-    switch (role) {
-      case 'Student':
-        email = 'student@example.com';
-        userId = 1001;
-        break;
-      case 'Teacher':
-        email = 'teacher@example.com';
-        userId = 2001;
-        break;
-      case 'Academy Admin':
-        email = 'admin@academy.example.com';
-        userId = 0;
-        break;
-      default:
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-    }
-
     try {
-      await supabase.signInWithPassword(
-        email: email,
-        password: 'mockpass',
-      );
+      // Simulate a brief delay for authentication
+      await Future.delayed(const Duration(milliseconds: 500));
 
       if (!context.mounted) return;
+
+      // Get mock user based on role
+      final mockDB = MockDatabaseService();
+      int userId;
+
+      switch (role) {
+        case 'Student':
+          // Get first student from mock data
+          final students = await mockDB.getStudents();
+          userId = students.isNotEmpty ? students.first['ID'] : 1;
+          break;
+        case 'Teacher':
+          // Get first teacher from mock data
+          final teachers = await mockDB.getTeachers();
+          userId = teachers.isNotEmpty ? teachers.first['ID'] : 1;
+          break;
+        case 'Academy Admin':
+          userId = 0; // Admin ID is always 0
+          break;
+        default:
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+      }
 
       Widget nextScreen;
       if (role == 'Student') {
@@ -72,7 +72,23 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } catch (e) {
-      print_developer('Login error: $e');
+      debugPrint('Login error: $e');
+      // Show error dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Login Error'),
+            content: Text('Failed to login: $e'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {

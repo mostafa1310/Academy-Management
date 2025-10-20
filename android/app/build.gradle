@@ -2,7 +2,6 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
-    id 'com.google.gms.google-services'
 }
 
 def localProperties = new Properties()
@@ -28,11 +27,11 @@ if (flutterminsdk == null) {
 }
 def fluttertargetsdk = localProperties.getProperty('flutter.targetSdkVersion')
 if (fluttertargetsdk == null) {
-    fluttertargetsdk = 34
+    fluttertargetsdk = 36
 }
 def fluttercompilesdk = localProperties.getProperty('flutter.compileSdkVersion')
 if (fluttercompilesdk == null) {
-    fluttercompilesdk = 34
+    fluttercompilesdk = 36
 }
 
 android {
@@ -81,7 +80,4 @@ flutter {
 
 dependencies {
     implementation 'com.android.support:multidex:1.0.3'
-    implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-config")
 }

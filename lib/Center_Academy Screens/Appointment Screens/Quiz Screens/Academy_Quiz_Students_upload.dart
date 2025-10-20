@@ -1,11 +1,9 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../../../mock/mock_data.dart';
+import '../../../mock/mock_service.dart';
 
 int currentPageIndex = 0;
 
@@ -31,85 +29,69 @@ class _Academy_Quiz_Students_uploadState
         Students_list.clear();
         studentItems.clear();
       });
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Appointment_Students/${widget.appointment.ID}"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (!mounted) {
+
+      final mockDB = MockDatabaseService();
+      final students = await mockDB.getStudents();
+
+      // Get students from this appointment
+      final appointmentStudents = students.map((student) {
+        return Student_Appointment(
+          ID: student['ID'],
+          Name: student['name'],
+        );
+      }).toList();
+
+      if (!mounted) return;
+
+      if (appointmentStudents.isEmpty) {
+        error_show("No students found", context);
         return;
       }
-      if (response.statusCode == 200) {
-        print_developer("decode data");
-        var jsonList = jsonDecode(response.body);
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<Student_Appointment> Students_data = jsonList
-              .map((json) => Student_Appointment.fromMap(json))
-              .toList();
-          setState(() {
-            Students_list = Students_data;
-          });
-          if (Students_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-          print_developer(Students_list.length);
-          studentItems.addAll(
-            Students_list.map((item) => Student_MapItem(student: item))
-                .toList(),
-          );
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-      }
+      setState(() {
+        Students_list = appointmentStudents;
+        studentItems.addAll(
+          Students_list.map((item) => Student_MapItem(student: item)).toList(),
+        );
+      });
     } catch (e) {
-      print_developer("Failed to load data $e");
-      error_show("Failed to load data", context);
-      // ignore: empty_catches
+      debugPrint("Failed to load student data: $e");
+      if (mounted) {
+        error_show("Failed to load student data", context);
+      }
     }
   }
 
   Future<bool> send_Quiz_Students() async {
-    print_developer("start_upload");
-    List<Map<String, dynamic>> selected_Students_list = studentItems
-        .map((x) => Student_Quiz_mark(
-            Name: x.student.Name, ID: x.student.ID, Mark: x.Mark))
-        .toList()
-        .map((x) => x.toJson())
-        .toList();
-    // print_developer(selected_Students_list.length);
     try {
-      supabase.realtime.disconnect();
-      print_developer(jsonEncode(selected_Students_list));
-      final response = await http.post(
-        Uri.parse(
-            "${Api_Url}Student_Management/Upload_Quiz_Students/${widget.quiz.ID}"),
-        body: jsonEncode(selected_Students_list),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        print_developer('Data: ${response.body}');
-        error_show("Students Uploaded successfully", context);
-        return true;
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
+      debugPrint("Updating quiz students");
+
+      // Get the quiz to update
+      final mockDB = MockDatabaseService();
+      final quizzes = await mockDB.getQuizzes();
+      final quizIndex = quizzes.indexWhere((q) => q['ID'] == widget.quiz.ID);
+
+      if (quizIndex == -1) {
+        error_show("Quiz not found", context);
         return false;
       }
+
+      // Update the quiz with new student marks
+      final students = studentItems
+          .map((item) => {
+                'student_id': item.student.ID,
+                'name': item.student.Name,
+                'mark': item.Mark,
+              })
+          .toList();
+
+      MockData.quizzes[quizIndex]['students'] = students;
+
+      error_show("Quiz marks updated successfully", context);
+      return true;
     } catch (e) {
-      print_developer(e);
-      error_show("Failed", context);
+      debugPrint("Failed to update quiz marks: $e");
+      error_show("Failed to update quiz marks", context);
       return false;
     }
   }
@@ -279,8 +261,14 @@ class _Academy_Quiz_Students_uploadState
                     SizedBox(height: 20),
                   ],
                 ),
-                Back_Button(),
-                Logo(),
+                Positioned(
+                  top: 20,
+                  left: 20,
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
               ],
             ),
           ),

@@ -37,7 +37,7 @@ class CustomDropdownFormField<T> extends StatelessWidget {
         //   color: Colors.grey[850],
         // ),
         // iconSize: 24.0, // Also set the size of the dropdown icon
-        value: value,
+        initialValue: value,
         icon: null,
         iconSize: 0,
         style: const TextStyle(

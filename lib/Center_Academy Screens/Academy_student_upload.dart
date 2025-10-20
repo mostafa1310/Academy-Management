@@ -63,22 +63,22 @@ class _Academy_student_uploadState extends State<Academy_student_upload> {
             .where((material) => material.isSelected)
             .map((material) => material.name)
             .toList());
-    
+
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       // Generate mock credentials
-      final mockEmail = '${selected_Email.toLowerCase()}';
-      final mockPassword = 'student${DateTime.now().millisecondsSinceEpoch % 1000}';
-      
+      final mockEmail = selected_Email.toLowerCase();
+      final mockPassword =
+          'student${DateTime.now().millisecondsSinceEpoch % 1000}';
+
       // Show mock credentials
       _showPopup(context, mockEmail, mockPassword);
       error_show("Student Uploaded successfully", context);
-      
+
       print_developer('Mock student created: ${student.toJson()}');
       return true;
-      
     } catch (e) {
       print_developer(e);
       error_show(e.toString(), context);

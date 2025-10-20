@@ -1,12 +1,11 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:Academy_Management/Widget/CustomDropDownFormField.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../../../mock/mock_service.dart';
+import '../../../mock/mock_data.dart';
+import '../../../Widget/back_button.dart';
 
 int currentPageIndex = 0;
 
@@ -58,91 +57,68 @@ class _Academy_Appointment_uploadState
         Teachers_list.clear();
         selected_Teacher = "";
       });
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Teachers_For_Appointment/$selected_Material"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (!mounted) {
+
+      // Get mock teachers
+      final mockDB = MockDatabaseService();
+      final teachers = await mockDB.getTeachers();
+
+      // Filter teachers by material
+      final availableTeachers = teachers
+          .where((teacher) => teacher['material'] == selected_Material)
+          .map((teacher) => Teacher(
+                ID: teacher['ID'],
+                Name: teacher['name'],
+                Email: teacher['email'],
+                Phone: teacher['phone'],
+                Material: teacher['material'],
+              ))
+          .toList();
+
+      if (!mounted) return;
+
+      if (availableTeachers.isEmpty) {
+        error_show("No teachers available for this material", context);
         return;
       }
-      if (response.statusCode == 200) {
-        print_developer("decode data");
-        var jsonList = jsonDecode(utf8.decode(response.bodyBytes));
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("No Teacher Found", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<Teacher> Teachers_data =
-              jsonList.map((json) => Teacher.fromMap(json)).toList();
-          if (Teachers_data.isEmpty) {
-            error_show("Nothing", context);
-            selected_Teacher = "";
-            return;
-          }
-          setState(() {
-            Teachers_list = Teachers_data;
-            selected_Teacher = Teachers_list[0].Name;
-          });
-          print_developer(Teachers_list.length);
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-      }
+      setState(() {
+        Teachers_list = availableTeachers;
+        selected_Teacher = Teachers_list[0].Name;
+      });
     } catch (e) {
-      print_developer("Failed to load data $e");
-      error_show("Failed to load data $e", context);
-      // ignore: empty_catches
+      debugPrint("Failed to load teachers: $e");
+      if (mounted) {
+        error_show("Failed to load teachers", context);
+      }
     }
   }
 
   Future<bool> send_Appointment_data() async {
-    print_developer("start_upload");
-    Appointment appointment = Appointment(
-      date: Date(
-        First_Day: selected_First_day,
-        Second_Day: selected_Second_day,
-        Hour_From: selected_Hour_From,
-        Hour_To: selected_Hour_To,
-        Hour_Mode: selected_Hour_Mode,
-      ),
-      Grade: selected_Grade,
-      Material: selected_Material,
-      Teacher_ID:
-          Teachers_list.firstWhere((x) => x.Name == selected_Teacher).ID!,
-    );
     try {
-      supabase.realtime.disconnect();
-      print_developer(jsonEncode(appointment.toJson()));
-      final response = await http.post(
-        Uri.parse("${Api_Url}Student_Management/Appointment_Upload"),
-        body: jsonEncode(appointment.toJson()),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        print_developer('Data: ${response.body}');
-        error_show("Appointment Uploaded successfully", context);
+      // Create appointment data
+      final appointmentData = {
+        'ID': MockData.appointments.length + 1,
+        'teacher_id':
+            Teachers_list.firstWhere((x) => x.Name == selected_Teacher).ID,
+        'material': selected_Material,
+        'grade': selected_Grade,
+        'first_day': selected_First_day,
+        'second_day': selected_Second_day,
+        'hour_from': selected_Hour_From,
+        'hour_to': selected_Hour_To,
+        'hour_mode': selected_Hour_Mode,
+        'students': [],
+        'created_at': DateTime.now().toIso8601String(),
+      };
 
-        return true;
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
+      // Add to mock data
+      MockData.appointments.add(appointmentData);
 
-        return false;
-      }
+      error_show("Appointment created successfully", context);
+      return true;
     } catch (e) {
-      print_developer(e);
-      error_show(e.toString(), context);
-
+      debugPrint("Failed to create appointment: $e");
+      error_show("Failed to create appointment", context);
       return false;
     }
   }
@@ -436,7 +412,6 @@ class _Academy_Appointment_uploadState
                 ),
               ),
             ),
-            Logo(),
             Back_Button(),
           ],
         ),

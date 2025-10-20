@@ -68,7 +68,6 @@ class _Academy_DashboardState extends State<Academy_Dashboard> {
         alignment: Alignment.topCenter,
         child: Stack(children: [
           Pages[currentPageIndex],
-          Logo(),
         ]),
       ),
       bottomNavigationBar: NavigationBarTheme(

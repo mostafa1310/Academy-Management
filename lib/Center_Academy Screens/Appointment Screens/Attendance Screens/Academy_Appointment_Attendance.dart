@@ -1,14 +1,12 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Academy_Appointments_Students_edit.dart';
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Attendance%20Screens/Academy_Attendance_Students_upload.dart';
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Attendance%20Screens/Academy_Attendance_upload.dart';
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../../../mock/mock_data.dart';
+import '../../../mock/mock_service.dart';
 
 int currentPageIndex = 0;
 
@@ -29,45 +27,41 @@ class _Academy_Appointment_AttendanceState
       setState(() {
         Attendance_list.clear();
       });
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Appointment_Attendance/$ID"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (!mounted) {
-        return;
-      }
-      if (response.statusCode == 200) {
-        print_developer("decode data");
-        var jsonList = jsonDecode(response.body);
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<AppointmentAttendance> Attendance_data = jsonList
-              .map((json) => AppointmentAttendance.fromMap(json))
-              .toList();
-          setState(() {
-            Attendance_list = Attendance_data;
-          });
-          if (Attendance_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
+      final mockDB = MockDatabaseService();
+      final attendanceRecords = await mockDB.getAttendance();
+
+      // Filter attendance records for this appointment
+      final appointmentAttendance = attendanceRecords
+          .where((record) => record['appointment_id'] == ID)
+          .map((record) => AppointmentAttendance(
+                ID: record['ID'] ?? MockData.getNextId(),
+                Name: record['name'] ?? "Attendance ${DateTime.now()}",
+                Appointment_ID: record['appointment_id'],
+                Students: (record['students'] as List<dynamic>?)
+                    ?.map((s) => Student_Appointment(
+                          ID: s['student_id'],
+                          Name: s['name'],
+                        ))
+                    .toList(),
+                created_at: DateTime.now(),
+              ))
+          .toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        Attendance_list = appointmentAttendance;
+      });
+
+      if (Attendance_list.isEmpty) {
+        error_show("No attendance records found", context);
       }
     } catch (e) {
-      print_developer("Failed to load data $e");
-      error_show("Failed to load data $e", context);
-      // ignore: empty_catches
+      debugPrint("Failed to load attendance data: $e");
+      if (mounted) {
+        error_show("Failed to load attendance data", context);
+      }
     }
   }
 

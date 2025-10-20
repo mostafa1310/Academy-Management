@@ -1,6 +1,7 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:Academy_Management/mock/mock_data.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'sample_data.dart';
 
 class MockSupabaseService {
   static final MockSupabaseService _instance = MockSupabaseService._internal();
@@ -81,6 +82,7 @@ class MockDatabaseService {
 
   Future<List<Map<String, dynamic>>> getAppointments() async {
     await Future.delayed(const Duration(milliseconds: 500));
+    debugPrint('Mock appointments data: ${MockData.appointments}');
     return MockData.appointments;
   }
 

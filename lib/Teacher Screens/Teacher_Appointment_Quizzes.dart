@@ -24,7 +24,7 @@ class _Teacher_Appointment_QuizzesState
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       // Mock quiz data
       final mockQuizzes = [
         Quiz(
@@ -98,26 +98,29 @@ class _Teacher_Appointment_QuizzesState
           }
         },
         child: Container(
-          color: const Color.fromARGB(255, 2, 35, 83),
+          color: Colors.white,
           alignment: Alignment.topCenter,
+          padding: EdgeInsets.all(16.0),
           child: Stack(
             children: [
-              Column(
-                children: <Widget>[
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: Quizzes_list.length,
-                      itemBuilder: (context, index) {
-                        return Quiz_widget(
-                          index: index,
-                          appointment: widget.appointment,
-                          Quizzes: Quizzes_list,
-                          textStyle_white: textStyle_white,
-                        );
-                      },
+              Padding(
+                padding: const EdgeInsets.only(top: 100),
+                child: Column(
+                  children: <Widget>[
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: Quizzes_list.length,
+                        itemBuilder: (context, index) {
+                          return Quiz_widget(
+                            index: index,
+                            appointment: widget.appointment,
+                            Quizzes: Quizzes_list,
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Positioned(
                 bottom: 40,
@@ -165,14 +168,12 @@ class Quiz_widget extends StatelessWidget {
   const Quiz_widget({
     super.key,
     required this.Quizzes,
-    required this.textStyle_white,
     required this.index,
     required this.appointment,
   });
 
   final List<Quiz> Quizzes;
   final Appointment appointment;
-  final TextStyle textStyle_white;
   final int index;
 
   @override
@@ -182,9 +183,12 @@ class Quiz_widget extends StatelessWidget {
       padding: const EdgeInsets.all(0),
       margin: const EdgeInsets.all(5),
       decoration: ShapeDecoration(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: const BorderSide(color: Colors.white, width: 2))),
+        color: Colors.blue[900],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+          side: BorderSide(width: 2, color: Colors.blue.shade900),
+        ),
+      ),
       child: ListTile(
         onTap: () {
           // Navigate to player details
@@ -203,7 +207,7 @@ class Quiz_widget extends StatelessWidget {
         //     const EdgeInsets.symmetric(vertical: 5.0, horizontal: 16.0),
         title: Text(
           Quizzes[index].Name,
-          style: textStyle_white,
+          style: TextStyle(color: Colors.white),
           softWrap: false, // Adjust the font size as needed
         ),
         // subtitle: Text(
@@ -212,7 +216,8 @@ class Quiz_widget extends StatelessWidget {
         // ),
         trailing: Text(
           "${Quizzes[index].created_at!.year}/${Quizzes[index].created_at!.month}/${Quizzes[index].created_at!.day}",
-          style: textStyle_white, // Adjust the font size as needed
+          style:
+              TextStyle(color: Colors.white), // Adjust the font size as needed
         ),
       ),
     );

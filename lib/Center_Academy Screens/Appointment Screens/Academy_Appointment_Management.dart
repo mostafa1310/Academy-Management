@@ -3,7 +3,7 @@ import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screen
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Quiz%20Screens/Academy_Appointment_Quizzes.dart';
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
+import '../../../Widget/back_button.dart';
 
 int currentPageIndex = 0;
 
@@ -65,7 +65,6 @@ class _Academy_Appointment_ManagementState
         child: Stack(children: [
           Pages[currentPageIndex],
           Back_Button(),
-          Logo(),
         ]),
       ),
       bottomNavigationBar: NavigationBarTheme(
@@ -84,9 +83,6 @@ class _Academy_Appointment_ManagementState
             setState(() {
               currentPageIndex = index;
             });
-            if (currentPageIndex != 1) {
-              supabase.channel('schema-db-changes').unsubscribe();
-            }
           },
           indicatorColor: const Color.fromARGB(255, 160, 159, 159),
           selectedIndex: currentPageIndex,

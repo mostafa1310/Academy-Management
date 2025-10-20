@@ -5,13 +5,6 @@ import 'package:flutter/material.dart';
 
 double top_gap = 20;
 double top_gap_extra = 40;
-Map<String, String> headers_request(String accessToken) {
-  return {
-    'Authorization': 'Bearer mock_token',
-    'Content-Type': 'application/json',
-    'x-client-info': supabase.currentUser?.email ?? "unknown",
-  };
-}
 
 String error_show(String value, BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(

@@ -1,13 +1,10 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:Academy_Management/Widget/CustomTextFormField.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../mock/mock_data.dart';
 
 int currentPageIndex = 0;
 
@@ -52,37 +49,31 @@ class _Academy_Teacher_uploadState extends State<Academy_Teacher_upload> {
   //     TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
 
   Future<bool> send_Teacher_data() async {
-    print_developer("start_upload");
-    Teacher student = Teacher(
-      Name: selected_Name,
-      Phone: selected_Phone,
-      Email: selected_Email.toLowerCase(),
-      Material: selected_Material,
-    );
     try {
-      supabase.realtime.disconnect();
-      print_developer(jsonEncode(student.toJson()));
-      final response = await http.post(
-        Uri.parse('${Api_Url}Student_Management/Teacher_Upload'),
-        body: jsonEncode(student.toJson()),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        print_developer('Data: ${response.body}');
-        var json = jsonDecode(response.body);
-        _showPopup(context, json["email"], json["password"]);
-        error_show("Student Uploaded successfully", context);
-        return true;
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-        return false;
-      }
+      final teacherData = {
+        'ID': MockData.teachers.length + 1,
+        'name': selected_Name,
+        'phone': selected_Phone,
+        'email': selected_Email.toLowerCase(),
+        'material': selected_Material,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      // Generate mock credentials
+      final mockEmail =
+          '${selected_Name.toLowerCase().replaceAll(" ", ".")}@academy.com';
+      final mockPassword = 'Teacher${MockData.teachers.length + 1}@2025';
+
+      // Add to mock data
+      MockData.teachers.add(teacherData);
+
+      // Show credentials popup
+      _showPopup(context, mockEmail, mockPassword);
+      error_show("Teacher account created successfully", context);
+      return true;
     } catch (e) {
-      print_developer(e);
-      error_show("Failed", context);
+      debugPrint("Failed to create teacher account: $e");
+      error_show("Failed to create teacher account", context);
       return false;
     }
   }

@@ -131,11 +131,6 @@ class Logo extends StatelessWidget {
               bottomRight: Radius.circular(15),
             ),
           ),
-          child: Image.asset(
-            'assets/Academy_Management Logo.png',
-            width: 75, // Set the width of the image
-            height: 75, // Set the height of the image
-          ),
         ),
       ),
     );

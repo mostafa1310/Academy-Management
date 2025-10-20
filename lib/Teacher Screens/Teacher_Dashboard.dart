@@ -25,18 +25,17 @@ class _Teacher_DashboardState extends State<Teacher_Dashboard> {
     try {
       // Simulate network delay
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       // Use mock data
       final mockAppointments = [
         Appointment(
           ID: 1,
           date: Date(
-            First_Day: "Monday",
-            Second_Day: "Wednesday",
-            Hour_From: 9,
-            Hour_To: 11,
-            Hour_Mode: "AM"
-          ),
+              First_Day: "Monday",
+              Second_Day: "Wednesday",
+              Hour_From: 9,
+              Hour_To: 11,
+              Hour_Mode: "AM"),
           Grade: "Grade 10",
           Material: "Mathematics",
           Teacher_ID: widget.ID,
@@ -44,12 +43,11 @@ class _Teacher_DashboardState extends State<Teacher_Dashboard> {
         Appointment(
           ID: 2,
           date: Date(
-            First_Day: "Tuesday",
-            Second_Day: "Thursday",
-            Hour_From: 1,
-            Hour_To: 3,
-            Hour_Mode: "PM"
-          ),
+              First_Day: "Tuesday",
+              Second_Day: "Thursday",
+              Hour_From: 1,
+              Hour_To: 3,
+              Hour_Mode: "PM"),
           Grade: "Grade 11",
           Material: "Physics",
           Teacher_ID: widget.ID,
@@ -59,7 +57,6 @@ class _Teacher_DashboardState extends State<Teacher_Dashboard> {
       setState(() {
         Appointments_list = mockAppointments;
       });
-      
     } catch (e) {
       print_developer("Failed to load data $e");
       error_show("Failed to load data", context);
@@ -107,7 +104,7 @@ class _Teacher_DashboardState extends State<Teacher_Dashboard> {
                       fontSize: 28, color: Color.fromARGB(255, 0, 53, 90)),
                 ),
                 Text(
-                  'Academy App',
+                  'AUC App',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -147,7 +144,7 @@ class _Teacher_DashboardState extends State<Teacher_Dashboard> {
                 //     child: Icon(Icons.add),
                 //   ),
                 // ),
-                Settings(context),
+                Settings(),
               ],
             ),
           ),
@@ -156,18 +153,22 @@ class _Teacher_DashboardState extends State<Teacher_Dashboard> {
     );
   }
 
-  Padding Settings(BuildContext context) {
+  Padding Settings() {
     return Padding(
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
           onPressed: () async {
             await supabase.signOut();
-            if (context.mounted) {
-              Navigator.pushReplacement(
+            setState(() {
+              Appointments_list.clear(); // Clear appointments on sign-out
+            });
+            if (mounted) {
+              Navigator.pop(context);
+              Navigator.push(
                 context,
                 PageTransition(
                   type: PageTransitionType.bottomToTopPop,
-                  duration: const Duration(milliseconds: 300),
+                  duration: const Duration(seconds: 2),
                   child: const LoginPage(),
                   childCurrent: widget,
                 ),

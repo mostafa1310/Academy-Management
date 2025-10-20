@@ -1,13 +1,10 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Quiz%20Screens/Academy_Quiz_Students_upload.dart';
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Quiz%20Screens/Academy_Quiz_upload.dart';
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../../../mock/mock_service.dart';
 
 int currentPageIndex = 0;
 
@@ -28,44 +25,54 @@ class _Academy_Appointment_QuizzesState
       setState(() {
         Quizzes_list.clear();
       });
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Appointment_Quizzes/${widget.appointment.ID}"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (!mounted) {
+
+      final mockDB = MockDatabaseService();
+      final quizzes = await mockDB.getQuizzes();
+
+      // Filter quizzes for this appointment
+      final appointmentQuizzes = quizzes
+          .where((quiz) => quiz['appointment_id'] == widget.appointment.ID)
+          .toList();
+
+      if (!mounted) return;
+
+      if (appointmentQuizzes.isEmpty) {
+        error_show("No quizzes found", context);
         return;
       }
-      if (response.statusCode == 200) {
-        print_developer("decode data");
-        var jsonList = jsonDecode(response.body);
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<Quiz> Attendance_data =
-              jsonList.map((json) => Quiz.fromMap(json)).toList();
-          setState(() {
-            Quizzes_list = Attendance_data;
-          });
-          if (Quizzes_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-      }
+      setState(() {
+        Quizzes_list = appointmentQuizzes.map((quiz) {
+          // parse created_at if present
+          DateTime createdAt = DateTime.now();
+          try {
+            if (quiz['created_at'] != null) {
+              createdAt = DateTime.parse(quiz['created_at'].toString());
+            }
+          } catch (_) {}
+
+          return Quiz(
+            ID: quiz['ID'],
+            Name: quiz['name'] ?? quiz['title'] ?? 'Quiz',
+            Appointment_ID: quiz['appointment_id'],
+            Max_mark: (quiz['max_mark'] ?? 100).toDouble(),
+            Students: (quiz['students'] as List<dynamic>?)
+                    ?.map<Student_Quiz_mark>((s) => Student_Quiz_mark(
+                          ID: s['student_id'],
+                          Name: s['name'],
+                          Mark: (s['mark'] ?? 0).toDouble(),
+                        ))
+                    .toList() ??
+                [],
+            created_at: createdAt,
+          );
+        }).toList();
+      });
     } catch (e) {
-      print_developer("Failed to load data $e");
-      error_show("Failed to load data", context);
-      // ignore: empty_catches
+      debugPrint("Failed to load quiz data: $e");
+      if (mounted) {
+        error_show("Failed to load quiz data", context);
+      }
     }
   }
 

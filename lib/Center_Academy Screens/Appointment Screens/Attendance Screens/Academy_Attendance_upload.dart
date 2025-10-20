@@ -1,12 +1,10 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:Academy_Management/Widget/CustomTextFormField.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../../../mock/mock_data.dart';
+import '../../../Widget/back_button.dart';
 
 int currentPageIndex = 0;
 
@@ -43,34 +41,24 @@ class _Academy_Attendance_uploadState extends State<Academy_Attendance_upload> {
 
   var _isLoading = false;
   Future<bool> send_Attendance_data() async {
-    print_developer("start_upload");
-    AppointmentAttendance Attendance = AppointmentAttendance(
-      Name: selected_Name,
-      Appointment_ID: widget.Appointment_ID,
-      Students: [],
-    );
     try {
-      supabase.realtime.disconnect();
-      print_developer(jsonEncode(Attendance.toJson()));
-      final response = await http.post(
-        Uri.parse("${Api_Url}Student_Management/Attendance_Upload"),
-        body: jsonEncode(Attendance.toJson()),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        print_developer('Data: ${response.body}');
-        error_show("Attendance Uploaded successfully", context);
-        return true;
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-        return false;
-      }
+      // Create a new attendance record
+      final attendance = {
+        'ID': MockData.attendance.length + 1,
+        'name': selected_Name,
+        'appointment_id': widget.Appointment_ID,
+        'students': [],
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      // Add to mock data
+      MockData.attendance.add(attendance);
+
+      error_show("Attendance created successfully", context);
+      return true;
     } catch (e) {
-      print_developer(e);
-      error_show("Failed", context);
+      debugPrint("Failed to create attendance: $e");
+      error_show("Failed to create attendance", context);
       return false;
     }
   }
@@ -191,8 +179,7 @@ class _Academy_Attendance_uploadState extends State<Academy_Attendance_upload> {
                   ],
                 ),
               ),
-              Back_Button(),
-              Logo(),
+              const Back_Button(),
             ],
           ),
         ),

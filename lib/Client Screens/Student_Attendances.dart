@@ -1,11 +1,8 @@
 // ignore_for_file: file_names, camel_case_types, non_constant_identifier_names, library_private_types_in_public_api, use_build_context_synchronously
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../mock/mock_service.dart';
 
 class Student_Attendances extends StatefulWidget {
   final Student student;
@@ -22,39 +19,45 @@ class _Student_AttendancesState extends State<Student_Attendances> {
 
   Future<void> Get_Student_Attendances() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Student_Attendances/${widget.student.ID}/${widget.selected_Material.trim()}"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
       setState(() {
         StudentRecords_list.clear();
       });
-      if (response.statusCode == 200) {
-        var jsonList = jsonDecode(response.body);
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
+      // Get mock attendance records
+      final mockDB = MockDatabaseService();
+      final attendanceRecords = await mockDB.getAttendance();
 
-          List<StudentAttendanceRecord> StudentRecords_data = jsonList
-              .map((json) => StudentAttendanceRecord.fromMap(json))
-              .toList();
-          setState(() {
-            StudentRecords_list = StudentRecords_data;
-          });
-          if (StudentRecords_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-        }
-      } else {
-        error_show(response.body, context);
+      // Filter records for this student and material
+      final studentRecords = attendanceRecords
+          .where((record) =>
+              record['students'].any(
+                  (student) => student['student_id'] == widget.student.ID) &&
+              record['material'] == widget.selected_Material)
+          .map((record) => StudentAttendanceRecord(
+                Attendance_name: record['name'],
+                Attend: record['students'].firstWhere((student) =>
+                        student['student_id'] ==
+                        widget.student.ID)['attended'] ??
+                    false,
+                created_at: DateTime.parse(record['created_at']),
+              ))
+          .toList();
+
+      if (!mounted) return;
+
+      if (studentRecords.isEmpty) {
+        error_show("No attendance records found", context);
+        return;
       }
+
+      setState(() {
+        StudentRecords_list = studentRecords;
+      });
     } catch (e) {
-      print_developer(e);
-      error_show("Failed to load data", context);
+      debugPrint("Failed to load attendance data: $e");
+      if (mounted) {
+        error_show("Failed to load attendance data", context);
+      }
     }
   }
 
@@ -120,12 +123,7 @@ class _Student_AttendancesState extends State<Student_Attendances> {
                               15), // Half of the width/height to make it fully round
                           bottomRight: Radius.circular(15),
                         ),
-                      ), // Adjust the top margin
-                      // child: Image.asset(
-                      //   'assets/AUC Logo.png',
-                      //   width: 75,
-                      //   height: 75,
-                      // ),
+                      ),
                     ),
                   ),
                 ],

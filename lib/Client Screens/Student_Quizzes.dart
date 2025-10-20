@@ -1,11 +1,8 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../mock/mock_service.dart';
 
 int currentPageIndex = 0;
 
@@ -23,44 +20,48 @@ class _Student_QuizzesState extends State<Student_Quizzes> {
   List<StudentQuizRecord> StudentRecords_list = [];
   Future<void> Get_Student_Quizzes() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Student_Quizzes/${widget.student.ID}/${widget.selected_Material.trim()}"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
       setState(() {
         StudentRecords_list.clear();
       });
-      if (response.statusCode == 200) {
-        print_developer("decode data");
-        var jsonList = jsonDecode(response.body);
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<StudentQuizRecord> StudentRecords_data =
-              jsonList.map((json) => StudentQuizRecord.fromMap(json)).toList();
-          setState(() {
-            StudentRecords_list = StudentRecords_data;
-          });
-          if (StudentRecords_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
+      // Get mock quiz records
+      final mockDB = MockDatabaseService();
+      final quizzes = await mockDB.getQuizzes();
+
+      // Filter quizzes for this student and material
+      final studentQuizzes = quizzes
+          .where((quiz) =>
+              quiz['students'].any(
+                  (student) => student['student_id'] == widget.student.ID) &&
+              quiz['material'] == widget.selected_Material)
+          .map((quiz) {
+        final studentResult = quiz['students'].firstWhere(
+            (student) => student['student_id'] == widget.student.ID,
+            orElse: () => {'mark': 0.0});
+
+        return StudentQuizRecord(
+          quizName: quiz['name'],
+          mark: studentResult['mark']?.toDouble() ?? 0.0,
+          maxMark: quiz['max_mark']?.toDouble() ?? 100.0,
+          createdAt: DateTime.parse(quiz['created_at']),
+        );
+      }).toList();
+
+      if (!mounted) return;
+
+      if (studentQuizzes.isEmpty) {
+        error_show("No quiz records found", context);
+        return;
       }
+
+      setState(() {
+        StudentRecords_list = studentQuizzes;
+      });
     } catch (e) {
-      print_developer("Failed to load data $e");
-      error_show("Failed to load data", context);
-      // ignore: empty_catches
+      debugPrint("Failed to load quiz data: $e");
+      if (mounted) {
+        error_show("Failed to load quiz data", context);
+      }
     }
   }
 
@@ -131,11 +132,6 @@ class _Student_QuizzesState extends State<Student_Quizzes> {
                             bottomRight: Radius.circular(15),
                           ),
                         ), // Adjust the top margin
-                        // child: Image.asset(
-                        //   'assets/AUC Logo.png',
-                        //   width: 75,
-                        //   height: 75,
-                        // ),
                       ),
                     ),
                   ],

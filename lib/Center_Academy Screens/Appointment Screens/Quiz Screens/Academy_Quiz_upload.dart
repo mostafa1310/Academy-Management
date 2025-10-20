@@ -1,12 +1,9 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:Academy_Management/Widget/CustomTextFormField.dart';
+import 'package:Academy_Management/mock/mock_data.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
 
 int currentPageIndex = 0;
 
@@ -29,34 +26,23 @@ class _Academy_Quiz_uploadState extends State<Academy_Quiz_upload> {
 
   bool _isLoading = false;
   Future<bool> send_Quiz_data() async {
-    print_developer("start_upload");
-    Quiz quiz = Quiz(
-      Name: selected_Name,
-      Max_mark: selected_Max_Mark,
-      Appointment_ID: widget.Appointment_ID,
-    );
     try {
-      supabase.realtime.disconnect();
-      print_developer(jsonEncode(quiz.toJson()));
-      final response = await http.post(
-        Uri.parse("${Api_Url}Student_Management/Quiz_Upload"),
-        body: jsonEncode(quiz.toJson()),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        print_developer('Data: ${response.body}');
-        error_show("Quiz Uploaded successfully", context);
-        return true;
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-        return false;
-      }
+      debugPrint("Creating new quiz");
+      final quiz = {
+        'ID': MockData.getNextId(),
+        'title': selected_Name,
+        'appointment_id': widget.Appointment_ID,
+        'max_mark': selected_Max_Mark,
+        'students': [],
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      MockData.addQuiz(quiz);
+      error_show("Quiz created successfully", context);
+      return true;
     } catch (e) {
-      print_developer(e);
-      error_show("Failed", context);
+      debugPrint("Failed to create quiz: $e");
+      error_show("Failed to create quiz", context);
       return false;
     }
   }
@@ -198,8 +184,14 @@ class _Academy_Quiz_uploadState extends State<Academy_Quiz_upload> {
                 ],
               ),
             ),
-            Back_Button(),
-            Logo(),
+            Positioned(
+              top: 20,
+              left: 20,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
           ],
         ),
       ),

@@ -1,11 +1,10 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../../../mock/mock_service.dart';
+import '../../../mock/mock_data.dart';
+import '../../../Widget/back_button.dart';
 
 int currentPageIndex = 0;
 
@@ -26,89 +25,73 @@ class _Academy_Attendance_Students_uploadState
   List<Student_Appointment> Students_list = [];
   Future<void> Get_Appointment_Students(int ID) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Appointment_Students/${widget.appointment.ID}"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (!mounted) {
+      setState(() {
+        Students_list.clear();
+        studentItems.clear();
+      });
+
+      final mockDB = MockDatabaseService();
+      final students = await mockDB.getStudents();
+
+      // Convert students to Student_Appointment format
+      final appointmentStudents = students
+          .map((student) => Student_Appointment(
+                ID: student['ID'],
+                Name: student['name'],
+              ))
+          .toList();
+
+      if (!mounted) return;
+
+      if (appointmentStudents.isEmpty) {
+        error_show("No students found", context);
         return;
       }
-      if (response.statusCode == 200) {
-        setState(() {
-          Students_list.clear();
-        });
-        print_developer("decode data");
-        var jsonList = jsonDecode(response.body);
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<Student_Appointment> Students_data = jsonList
-              .map((json) => Student_Appointment.fromMap(json))
-              .toList();
-          setState(() {
-            Students_list = Students_data;
-          });
-          if (Students_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-          print_developer(Students_list.length);
-          studentItems.addAll(
-            Students_list.map((item) => Student_MapItem(student: item))
-                .toList(),
-          );
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-      }
+      setState(() {
+        Students_list = appointmentStudents;
+        studentItems.addAll(
+          Students_list.map((item) => Student_MapItem(student: item)).toList(),
+        );
+      });
     } catch (e) {
-      print_developer("Failed to load data $e");
-      error_show("Failed to load data $e", context);
-      // ignore: empty_catches
+      debugPrint("Failed to load student data: $e");
+      if (mounted) {
+        error_show("Failed to load student data", context);
+      }
     }
   }
 
   Future<bool> send_Attendance_Students() async {
-    print_developer("start_upload");
-    List<Map<String, dynamic>> selected_Students_list = studentItems
-        .where((x) => x.isSelected)
-        .toList()
-        .map((x) => Student_Appointment(Name: x.student.Name, ID: x.student.ID))
-        .toList()
-        .map((x) => x.toJson())
-        .toList();
-    print_developer(selected_Students_list.length);
     try {
-      supabase.realtime.disconnect();
-      print_developer(jsonEncode(selected_Students_list));
-      final response = await http.post(
-        Uri.parse(
-            "${Api_Url}Student_Management/Upload_Attendance_Students/${widget.Attendance.ID}"),
-        body: jsonEncode(selected_Students_list),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (response.statusCode == 200) {
-        print_developer('Data: ${response.body}');
-        error_show("Students Uploaded successfully", context);
-        return true;
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
+      // Get selected students
+      final selectedStudents = studentItems
+          .where((x) => x.isSelected)
+          .map((x) => {
+                'student_id': x.student.ID,
+                'name': x.student.Name,
+              })
+          .toList();
+
+      // Get the attendance record to update
+      final mockDB = MockDatabaseService();
+      final attendance = await mockDB.getAttendance();
+      final attendanceIndex =
+          attendance.indexWhere((a) => a['ID'] == widget.Attendance.ID);
+
+      if (attendanceIndex == -1) {
+        error_show("Attendance record not found", context);
         return false;
       }
+
+      // Update the attendance record with selected students
+      MockData.attendance[attendanceIndex]['students'] = selectedStudents;
+
+      error_show("Students attendance updated successfully", context);
+      return true;
     } catch (e) {
-      print_developer(e);
-      error_show("Failed", context);
+      debugPrint("Failed to update attendance: $e");
+      error_show("Failed to update attendance", context);
       return false;
     }
   }
@@ -277,8 +260,7 @@ class _Academy_Attendance_Students_uploadState
               //     child: Icon(Icons.edit),
               //   ),
               // ),
-              Back_Button(),
-              Logo(),
+              const Back_Button(),
             ],
           ),
         ),

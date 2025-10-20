@@ -1,14 +1,11 @@
 // ignore_for_file: file_names, non_constant_identifier_names, use_build_context_synchronously, depend_on_referenced_packages, prefer_const_constructors, camel_case_types, library_private_types_in_public_api
 
-import 'dart:convert';
-
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Academy_Appointment_Management.dart';
 import 'package:Academy_Management/Center_Academy%20Screens/Appointment%20Screens/Academy_Appointment_upload.dart';
 import 'package:Academy_Management/Main_Manger.dart';
 import 'package:Academy_Management/Widget/CustomDropDownFormField.dart';
 import 'package:flutter/material.dart';
-import 'package:Academy_Management/main.dart';
-import 'package:http/http.dart' as http;
+import '../../mock/mock_service.dart';
 
 int currentPageIndex = 0;
 
@@ -23,7 +20,7 @@ class _Academy_AppointmentsState extends State<Academy_Appointments> {
   final TextEditingController Student_name_field =
       TextEditingController(text: "");
   String selected_Grade = "Grade 10";
-  String selected_Material = "English";
+  String selected_Material = "Math 1";
   List<String> Grades_List = ["Grade 10", "Grade 11", "Grade 12"];
   List<String> Material_List = [
     'English',
@@ -39,47 +36,101 @@ class _Academy_AppointmentsState extends State<Academy_Appointments> {
   List<Appointment> Appointments_list = [];
   Future<void> Get_Appointments(String Material, String Grade) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            "${Api_Url}Student_Management/Get_Appointments/${Grade.trim()}/${selected_Material.trim()}"),
-        headers: headers_request(supabase.auth.currentSession!.accessToken),
-      );
-      print_developer(
-          'response: ${response.statusCode} - ${jsonDecode(response.body)}');
-      if (!mounted) {
+      setState(() {
+        Appointments_list.clear();
+      });
+
+      // Get mock appointments
+      final mockDB = MockDatabaseService();
+      final appointments = await mockDB.getAppointments();
+
+      debugPrint('Fetched ${appointments.length} appointments');
+      debugPrint('Filtering for grade: $Grade, material: $Material');
+
+      // Validate appointments structure
+      for (var apt in appointments) {
+        if (apt['date'] == null) {
+          debugPrint('Warning: appointment ${apt['ID']} has null date');
+        } else {
+          debugPrint('Appointment ${apt['ID']} date structure: ${apt['date']}');
+        }
+      }
+
+      // Filter appointments by grade and material
+      final filteredAppointments = appointments.where((apt) {
+        final matches = apt['grade'] == Grade && apt['material'] == Material;
+        debugPrint(
+            'Checking appointment ${apt['ID']}: grade=${apt['grade']}, material=${apt['material']}, matches=$matches');
+        return matches;
+      }).map((apt) {
+        // mock_data stores the date fields inside a nested 'date' map
+        final dateMap = apt['date'] as Map<String, dynamic>?;
+
+        // Debug print to trace the date map
+        debugPrint('Processing appointment ${apt['ID']} date fields:');
+        debugPrint('  First_Day: ${dateMap?['First_Day']}');
+        debugPrint('  Second_Day: ${dateMap?['Second_Day']}');
+        debugPrint('  Hour_From: ${dateMap?['Hour_From']}');
+        debugPrint('  Hour_To: ${dateMap?['Hour_To']}');
+        debugPrint('  Hour_Mode: ${dateMap?['Hour_Mode']}');
+
+        if (dateMap == null) {
+          debugPrint('Warning: null date map for appointment ${apt['ID']}');
+          return Appointment(
+            ID: apt['ID'] ?? 0,
+            Material: apt['material'] ?? '',
+            Grade: apt['grade'] ?? '',
+            Teacher_ID: apt['teacher_id'] ?? 0,
+            date: Date(
+              First_Day: '',
+              Second_Day: '',
+              Hour_From: 0,
+              Hour_To: 0,
+              Hour_Mode: '',
+            ),
+          );
+        }
+
+        final firstDay = dateMap['First_Day']?.toString() ?? '';
+        final secondDay = dateMap['Second_Day']?.toString() ?? '';
+        final hourFrom = dateMap['Hour_From'] is int
+            ? dateMap['Hour_From'] as int
+            : int.tryParse(dateMap['Hour_From']?.toString() ?? '') ?? 0;
+        final hourTo = dateMap['Hour_To'] is int
+            ? dateMap['Hour_To'] as int
+            : int.tryParse(dateMap['Hour_To']?.toString() ?? '') ?? 0;
+        final hourMode = dateMap['Hour_Mode']?.toString() ?? '';
+
+        return Appointment(
+          ID: apt['ID'] ?? 0,
+          Material: apt['material']?.toString() ?? '',
+          Grade: apt['grade']?.toString() ?? '',
+          Teacher_ID: apt['teacher_id'] ?? 0,
+          date: Date(
+            First_Day: firstDay,
+            Second_Day: secondDay,
+            Hour_From: hourFrom,
+            Hour_To: hourTo,
+            Hour_Mode: hourMode,
+          ),
+        );
+      }).toList();
+
+      if (!mounted) return;
+
+      if (filteredAppointments.isEmpty) {
+        error_show("No appointments found", context);
         return;
       }
-      if (response.statusCode == 200) {
-        setState(() {
-          Appointments_list.clear();
-        });
-        print_developer("decode data");
-        var jsonList = jsonDecode(response.body);
 
-        if (jsonList is List) {
-          if (jsonList.isEmpty) {
-            error_show("Nothing", context);
-            return;
-          }
-          print_developer("parse data $jsonList");
-          print_developer(jsonList.firstOrNull);
-          List<Appointment> Appointments_data =
-              jsonList.map((json) => Appointment.fromMap(json)).toList();
-          setState(() {
-            Appointments_list = Appointments_data;
-          });
-          if (Appointments_list.isEmpty) {
-            error_show("Nothing", context);
-          }
-        }
-      } else {
-        print_developer('Error: ${response.statusCode} - ${response.body}');
-        error_show(response.body, context);
-      }
+      setState(() {
+        Appointments_list = filteredAppointments;
+      });
     } catch (e) {
-      print_developer("Failed to load data");
-      error_show("Failed to load data", context);
-      // ignore: empty_catches
+      debugPrint("Failed to load appointments: $e");
+      if (mounted) {
+        error_show("Failed to load appointments", context);
+      }
     }
   }
 
