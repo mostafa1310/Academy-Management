@@ -1,72 +1,29 @@
 // ignore_for_file: non_constant_identifier_names, camel_case_types
 
-import 'dart:io';
-
 import 'package:Academy_Management/Screens/Auth_Login.dart';
 import 'package:Academy_Management/Teacher%20Screens/Teacher_Dashboard.dart';
-import 'package:Academy_Management/config_prod.dart';
-import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:developer' as developer;
-import 'package:firebase_core/firebase_core.dart';
 import 'Center_Academy Screens/Academy_Dashboard.dart';
 import 'Client Screens/Student_Dashboard.dart';
-import 'firebase_options.dart';
+import 'mock/mock_service.dart';
 
 const String name = 'my.Academy_Management.Academy_Management_APP';
-const String Api_Url = Api_Url_var;
 
 void print_developer(Object value) {
   developer.log(value.toString(), name: name);
 }
 
-late SupabaseClient supabase;
-String supabaseUrl = "";
-String supabaseKey = "";
+late MockSupabaseService supabase;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    name: "dev project",
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  final remoteConfig = FirebaseRemoteConfig.instance;
-  await remoteConfig.setConfigSettings(RemoteConfigSettings(
-    fetchTimeout: const Duration(minutes: 1),
-    minimumFetchInterval: const Duration(hours: 1),
-  ));
-  await remoteConfig.fetchAndActivate();
-  try {
-    if (kIsWeb) {
-      print_developer("is_web");
-      print_developer(remoteConfig.getAll());
-      supabaseKey = remoteConfig.getString("supabase_anonKey");
-      supabaseUrl = remoteConfig.getString("supabase_url");
-      print_developer(supabaseUrl);
-      print_developer(supabaseKey);
-    } else if (Platform.isAndroid || Platform.isIOS) {
-      await dotenv.load(fileName: "keys.env");
-      supabaseUrl = dotenv.env['supabaseUrl'] ?? '';
-      supabaseKey = dotenv.env['supabaseKey'] ?? '';
-      if (kDebugMode) {
-        developer.log("it is a debug mode", name: name);
-      } else {
-        developer.log("it is a PhysicalDevice", name: name);
-      }
-    }
-
-    if (supabaseKey.isNotEmpty && supabaseUrl.isNotEmpty) {
-      print_developer("supabase initialize...");
-      await Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabaseKey,
-      );
-      supabase = Supabase.instance.client;
-    }
-    // ignore: empty_catches
-  } catch (e) {}
+  
+  // Initialize mock services
+  supabase = MockSupabaseService();
+  
+  print_developer("Mock services initialized");
 
   runApp(const MyApp());
 }
@@ -75,7 +32,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    if (supabase.auth.currentUser == null) {
+    if (supabase.currentUser == null) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Login',
@@ -102,44 +59,47 @@ class MyApp extends StatelessWidget {
 }
 
 MaterialApp app() {
-  supabase.auth.refreshSession();
-  if (supabase.auth.currentUser!.userMetadata!.containsValue("Student")) {
-    print_developer(supabase.auth.currentUser!.userMetadata!);
-    int id = supabase.auth.currentUser!.userMetadata!["ID"];
-    return MaterialApp(
-      title: 'Home',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Cairo',
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: Student_Dashboard(
-        ID: id,
-      ),
-    );
-  } else if (supabase.auth.currentUser!.email!.contains("academy")) {
-    return MaterialApp(
-      title: 'Home',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Cairo',
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: const Academy_Dashboard(),
-    );
-  } else if (supabase.auth.currentUser!.userMetadata!
-      .containsValue("Teacher")) {
-    return MaterialApp(
-      title: 'Home',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Cairo',
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home:
-          Teacher_Dashboard(ID: supabase.auth.currentUser!.userMetadata!["ID"]),
-    );
+  supabase.refreshSession();
+  final metadata = supabase.currentUser?.userMetadata;
+  
+  if (metadata != null) {
+    if (metadata.containsValue("Student")) {
+      print_developer(metadata);
+      int id = metadata["ID"];
+      return MaterialApp(
+        title: 'Home',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          fontFamily: 'Cairo',
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: Student_Dashboard(
+          ID: id,
+        ),
+      );
+    } else if (supabase.currentUser?.email?.contains("academy") ?? false) {
+      return MaterialApp(
+        title: 'Home',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          fontFamily: 'Cairo',
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: const Academy_Dashboard(),
+      );
+    } else if (metadata.containsValue("Teacher")) {
+      return MaterialApp(
+        title: 'Home',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          fontFamily: 'Cairo',
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: Teacher_Dashboard(ID: metadata["ID"]),
+      );
+    }
   }
+
   return MaterialApp(
     title: 'Home',
     theme: ThemeData(
